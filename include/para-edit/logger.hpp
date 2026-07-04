@@ -1,17 +1,18 @@
 #pragma once
 
 #include <string>
-#include <chrono>    // used for timestamping logs
+#include <chrono>   // used for timestamping logs
 #include <vector>
-#include <sstream>  // streams for easy argument passing
-#include <mutex>    // used for thread-safety - this singleton class 
-                    // may be used concurrently
+#include <sstream>
+#include <mutex>
+                
+
+// designed to be used as a singleton class via macros
 
 class Logger 
 {
 public:
-    // enum class so that types cannot be implicitly cast to int
-    enum LogLevel {
+    enum class LogLevel {
         debug,
         info,
         warning,
@@ -28,8 +29,7 @@ public:
     };
 
     static void LogMessage( LogLevel lvl, const std::string& msg, 
-                            const char* file = "", int line = 0 ) 
-    {
+                            const char* file = "", int line = 0 ) {
         m_GetInstance().m_LogMessage(lvl, msg, file, line);
     }
 
@@ -42,27 +42,23 @@ public:
     }
 
 private:
-    Logger() { };
+    Logger() {};
 
-    // only used internally - hence why the assignment + copy constructors
-    // are not explicitly deleted
-    static Logger& m_GetInstance() 
-    {
+    static Logger& m_GetInstance() {
         static Logger instance;
         return instance;
     }
 
     void m_LogMessage( LogLevel lvl, const std::string& msg, 
-                            const char* file, int line)
-    {
+                            const char* file, int line) {
         std::lock_guard<std::mutex> lock(m_mutex);
 
         auto t = std::chrono::system_clock::now();
         m_logs.push_back({ t, file, line, lvl, msg });
     }
 
-    std::vector<Log> m_logs;
-    std::mutex m_mutex;
+    std::vector<Log> m_logs{};
+    std::mutex m_mutex{};
 };
 
 
