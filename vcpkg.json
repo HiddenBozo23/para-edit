@@ -1,0 +1,17 @@
+{
+    "name": "para-edit",
+    "version": "1.0",
+    "dependencies": [
+        "glm",
+        {
+            "name": "imgui",
+            "features": [
+                "glfw-binding",
+                "opengl3-binding",
+                "docking-experimental"
+            ]
+        },
+        "glfw3",
+        "glad"
+    ]
+}

@@ -1,3 +1,5 @@
 build/
 vcpkg/
 .vscode/
+.clang-format
+buildScript.sh

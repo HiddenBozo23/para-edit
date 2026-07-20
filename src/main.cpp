@@ -1,10 +1,7 @@
-#include <iostream>
-
-#include "para-edit/logger.hpp"
-#include "para-edit/ecs.hpp"
+#include "para-edit/editor/Editor.hpp"
 
 int main() {
-    LOG_INFO("this is a message");
+    para::Editor editor = para::Editor();
 
-    std::cout << Logger::GetLogs()[0].msg << std::endl;
+    editor.Run();
 }
