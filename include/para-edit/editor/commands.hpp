@@ -28,6 +28,9 @@ class ICommand {
 template <typename T>
 class ValueUpdateCommand : public ICommand {
    public:
+    ValueUpdateCommand(Scene& scene, Entity entity, T oldValue, T newValue)
+        : ICommand(scene), m_entity(entity), m_oldValue(oldValue), m_newValue(newValue) {}
+
     ValueUpdateCommand(Scene& scene, Entity entity, T newValue)
         : ICommand(scene), m_entity(entity), m_newValue(std::move(newValue)) {
         T* component = m_scene.GetComponent<T>(entity);
@@ -94,6 +97,40 @@ class ReparentCommand : public ICommand {
     Entity m_newParent;
 
     HierarchySystem* m_hs;
+};
+
+class CreateEntityCommand : public ICommand {
+   public:
+    CreateEntityCommand(Scene& scene, Entity parent, HierarchySystem& hs)
+        : ICommand(scene), m_parent(parent), m_hs(hs) {}
+
+    void Execute() override {
+        m_entity = m_scene.CreateEntity();
+
+        if (m_parent != INVALID_ENTITY) {
+            m_hs.SetParent(m_entity, m_parent);
+        }
+    }
+
+    void Undo() override {
+        if (m_entity == INVALID_ENTITY) {
+            return;
+        }
+        if (m_parent != INVALID_ENTITY) {
+            m_hs.RemoveChild(m_entity, m_parent);
+        }
+
+        m_scene.DestroyEntity(m_entity);
+    }
+
+   private:
+    Entity m_entity = INVALID_ENTITY;
+    Entity m_parent;
+
+    HierarchySystem& m_hs;
+};
+
+class DestroyEntityCommand : public ICommand {
 };
 
 template <typename T>

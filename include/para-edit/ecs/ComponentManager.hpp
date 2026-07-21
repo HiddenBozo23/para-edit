@@ -110,23 +110,27 @@ class ComponentArray : public IComponentArray {
 class ComponentManager {
    public:
     template <typename T>
-    void RegisterComponent() {
+    ComponentIndex RegisterComponent() {
         std::type_index typeIndex = std::type_index(typeid(T));
 
         if (m_componentIndexMap.find(typeIndex) != m_componentIndexMap.end()) {
             LOG_ERROR("ComponentManager: failed to register component array of type ("
                       << typeid(T).name() << "). already registered");
-            return;
+            return INVALID_COMPONENT;
         }
         if (m_nextComponentIndex >= MAX_COMPONENTS) {
             LOG_ERROR("ComponentManager: failed to register component array of type ("
                       << typeid(T).name() << "). maximum components (" << MAX_COMPONENTS << ") reached.");
-            return;
+            return INVALID_COMPONENT;
         }
 
-        m_componentIndexMap.insert({typeIndex, m_nextComponentIndex});
-        m_componentArrayMap.insert({typeIndex, std::make_unique<ComponentArray<T>>()});
+        ComponentIndex ci = m_nextComponentIndex;
         m_nextComponentIndex++;
+
+        m_componentIndexMap.insert({typeIndex, ci});
+        m_componentArrayMap.insert({typeIndex, std::make_unique<ComponentArray<T>>()});
+
+        return ci;
     }
 
     template <typename T>

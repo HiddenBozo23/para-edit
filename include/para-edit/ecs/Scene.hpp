@@ -4,6 +4,9 @@
 #include "para-edit/ecs/ComponentManager.hpp"
 #include "para-edit/ecs/EntityManager.hpp"
 #include "para-edit/ecs/SystemManager.hpp"
+#include "para-edit/ecs/components.hpp"
+#include "para-edit/ecs/systems/HierarchySystem.hpp"
+#include "para-edit/ecs/types.hpp"
 
 namespace para {
 class Scene {
@@ -12,10 +15,24 @@ class Scene {
         m_entityManager = std::make_unique<EntityManager>();
         m_componentManager = std::make_unique<ComponentManager>();
         m_systemManager = std::make_unique<SystemManager>();
+
+        RegisterComponent<Name>();
+        ComponentIndex ci = RegisterComponent<Hierarchy>();
+        RegisterComponent<Transform>();
+
+        RegisterSystem<HierarchySystem>();
+        Signature signature;
+        signature.set(GetComponentIndex<Hierarchy>());
+        SetSystemSignature<HierarchySystem>(signature);
     }
 
     Entity CreateEntity() {
-        return m_entityManager->CreateEntity();
+        Entity entity = m_entityManager->CreateEntity();
+
+        AddComponent<Name>(entity, {});
+        AddComponent<Hierarchy>(entity, {});
+
+        return entity;
     }
 
     void DestroyEntity(Entity e) {
@@ -25,8 +42,21 @@ class Scene {
     }
 
     template <typename T>
-    void RegisterComponent() {
-        m_componentManager->RegisterComponent<T>();
+    ComponentIndex RegisterComponent() {
+        return m_componentManager->RegisterComponent<T>();
+    }
+
+    template <typename T>
+    bool HasComponent(Entity e) {
+        ComponentIndex ci = m_componentManager->GetComponentIndex<T>();
+        if (ci == INVALID_COMPONENT) {
+            return false;
+        }
+
+        Signature s;
+        s.set(ci);
+
+        return (s & m_entityManager->GetSignature(e)) != 0;
     }
 
     template <typename T>
@@ -75,7 +105,7 @@ class Scene {
 
     template <typename T, typename... Args>
     T* RegisterSystem(Args&&... args) {
-        return m_systemManager->RegisterSystem<T>(std::forward<Args>(args)...);
+        return m_systemManager->RegisterSystem<T>(*this, std::forward<Args>(args)...);
     }
 
     template <typename T>

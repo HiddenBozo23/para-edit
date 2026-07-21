@@ -4,6 +4,8 @@
 #include "para-edit/ecs/components.hpp"
 #include "para-edit/ecs/systems/HierarchySystem.hpp"
 #include "para-edit/ecs/types.hpp"
+#include "para-edit/editor/CommandManager.hpp"
+#include "para-edit/editor/commands.hpp"
 #include "para-edit/editor/views/HierarchyView.hpp"
 #include "para-edit/editor/views/InspectorView.hpp"
 #include "para-edit/editor/views/LogView.hpp"
@@ -30,18 +32,11 @@ Editor::Editor()
     m_viewManager.AddView<InspectorView>(*this);
 
     // delete this later
-    m_scene.RegisterSystem<HierarchySystem>(m_scene);
-    m_scene.RegisterComponent<Hierarchy>();
-
-    Signature signature;
-    signature.set(m_scene.GetComponentIndex<Hierarchy>());
-    m_scene.SetSystemSignature<HierarchySystem>(signature);
 
     Entity e1 = m_scene.CreateEntity();
     Entity e2 = m_scene.CreateEntity();
 
-    m_scene.AddComponent<Hierarchy>(e1, {});
-    m_scene.AddComponent<Hierarchy>(e2, {});
+    m_scene.AddComponent<Transform>(e1, {});
 
     LOG_DEBUG("TEST");
     LOG_INFO("TEST");
@@ -105,6 +100,8 @@ void Editor::OnRender() {
         m_SetupDockspace(dockspace_id, viewport->Size);
     }
 
+    m_RenderMenuBar();
+
     m_viewManager.RenderAll();
 
     ImGui::End();
@@ -118,6 +115,31 @@ CommandManager& Editor::GetCommandManager() {
     return m_commandManager;
 }
 
+void Editor::m_RenderMenuBar() {
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("Scene")) {
+            if (ImGui::MenuItem("Undo")) {
+                m_commandManager.Undo();
+            }
+            if (ImGui::MenuItem("Redo")) {
+                m_commandManager.Redo();
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Entity")) {
+            if (ImGui::BeginMenu("Add")) {
+                if (ImGui::MenuItem("Empty")) {
+                    AddEmptyEntity();
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+}
+
 void Editor::m_SetupDockspace(ImGuiID dockspaceId, ImVec2 size) {
     ImGui::DockBuilderRemoveNode(dockspaceId);
     ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
@@ -126,7 +148,7 @@ void Editor::m_SetupDockspace(ImGuiID dockspaceId, ImVec2 size) {
     ImGuiID dockLeft, dockRight, dockBottom, dockCenter;
 
     dockLeft = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Left, 0.15f, nullptr, &dockspaceId);
-    dockRight = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Right, 0.2f, nullptr, &dockspaceId);
+    dockRight = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Right, 0.27f, nullptr, &dockspaceId);
     dockBottom = ImGui::DockBuilderSplitNode(dockspaceId, ImGuiDir_Down, 0.2f, nullptr, &dockspaceId);
     dockCenter = dockspaceId;
 
@@ -135,5 +157,9 @@ void Editor::m_SetupDockspace(ImGuiID dockspaceId, ImVec2 size) {
     ImGui::DockBuilderDockWindow("Inspector", dockRight);
 
     ImGui::DockBuilderFinish(dockspaceId);
+}
+
+void Editor::AddEmptyEntity() {
+    m_commandManager.Execute<CreateEntityCommand>(0, *m_scene.GetSystem<HierarchySystem>());
 }
 }  // namespace para

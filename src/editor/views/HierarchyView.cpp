@@ -52,8 +52,17 @@ void HierarchyView::OnRender() {
 
 void HierarchyView::m_DrawEntity(Entity entity, Hierarchy* hc, Scene& scene, HierarchySystem* hs) {
     std::string label = "entity " + std::to_string(entity);
+    auto nc = scene.GetComponent<Name>(entity);
+    if (nc && !std::string(nc->name).empty()) {
+        label = nc->name;
+    }
 
-    bool nodeOpen = ImGui::TreeNodeEx(label.c_str());
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
+    if (hc->firstChild == INVALID_ENTITY) {
+        flags |= ImGuiTreeNodeFlags_Leaf;
+    }
+
+    bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), flags);
 
     if (ImGui::BeginDragDropSource()) {
         ImGui::SetDragDropPayload(m_dragDropKey.data(), &entity, sizeof(Entity));

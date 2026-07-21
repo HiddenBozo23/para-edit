@@ -1,11 +1,12 @@
 #pragma once
 
-#include "para-edit/ecs/Scene.hpp"
 #include "para-edit/ecs/SystemManager.hpp"
 #include "para-edit/ecs/components.hpp"
 #include "para-edit/ecs/types.hpp"
 
 namespace para {
+
+class Scene;
 
 class HierarchySystem : public System {
    public:
@@ -13,7 +14,8 @@ class HierarchySystem : public System {
 
     void OnEntityRemoved(Entity e) override;
 
-    void SetParent(Entity childE, Entity parentE);
+    void SetParent(Entity child, Entity parent);
+    void RemoveChild(Entity child, Entity parent);
 
     bool IsAncestor(Entity entity, Entity ancestor);
 

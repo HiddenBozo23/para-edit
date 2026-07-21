@@ -14,7 +14,7 @@ class View {
     virtual void OnRender() = 0;
 
    protected:
-    virtual void m_ContextMenu();
+    virtual void m_ContextMenu() {}
     Editor& m_editor;
 };
 }  // namespace para

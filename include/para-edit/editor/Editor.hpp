@@ -26,8 +26,13 @@ class Editor : public Application {
         m_commandManager.Execute<T>(std::forward<Args>(args)...);
     }
 
+    void AddEmptyEntity();
+
    private:
+    void m_RenderMenuBar();
+
     void m_SetupDockspace(ImGuiID dockspaceId, ImVec2 size);
+
     bool m_firstFrame = true;
 
     Scene m_scene{};

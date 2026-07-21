@@ -56,7 +56,7 @@ class System {
 class SystemManager {
    public:
     template <typename T, typename... Args>
-    T* RegisterSystem(Args&&... args) {
+    T* RegisterSystem(Scene& scene, Args&&... args) {
         std::type_index typeIndex = std::type_index(typeid(T));
 
         if (m_systemMap.find(typeIndex) != m_systemMap.end()) {
@@ -65,7 +65,7 @@ class SystemManager {
             return nullptr;
         }
 
-        auto system = std::make_unique<T>(std::forward<Args>(args)...);
+        auto system = std::make_unique<T>(scene, std::forward<Args>(args)...);
         T* pointer = system.get();
         m_systemMap.emplace(typeIndex, std::move(system));
 

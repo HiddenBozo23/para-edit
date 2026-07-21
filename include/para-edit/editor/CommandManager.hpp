@@ -30,7 +30,7 @@ class CommandManager {
 
     void Undo() {
         if (!m_undoList.empty()) {
-            auto command = std::move(m_undoList[m_undoList.size()]);
+            auto command = std::move(m_undoList[m_undoList.size() - 1]);
             m_undoList.pop_back();
 
             command->Undo();
@@ -41,7 +41,7 @@ class CommandManager {
 
     void Redo() {
         if (!m_redoList.empty()) {
-            auto command = std::move(m_redoList[m_redoList.size()]);
+            auto command = std::move(m_redoList[m_redoList.size() - 1]);
             m_redoList.pop_back();
 
             command->Execute();

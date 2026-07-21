@@ -12,8 +12,20 @@ InspectorView::InspectorView(Editor& editor)
     : View(editor) {
     // register all component inspectors
     // assume component exists at time draw is called (check made in OnRender)
-    m_RegisterInspector<Transform>("transform", [](Entity entity, Scene& scene, CommandManager& cm) {
-        auto* tc = scene.GetComponent<Transform>(entity);
+    m_RegisterInspector<Name>("name", [this](Entity entity,
+                                             Name& nc, Scene& scene, CommandManager& cm) {
+        ImGui::PushID(entity);
+        ImGui::InputText("name", nc.name, sizeof(Name));
+        ImGui::PopID();
+
+        m_HandleEditCommand<Name>(nc, entity, scene, cm);
+    });
+
+    m_RegisterInspector<Transform>("transform", [this](Entity entity,
+                                                       Transform& tc, Scene& scene, CommandManager& cm) {
+        ImGui::DragFloat3("position", &tc.position.x, 0.1f);
+
+        m_HandleEditCommand<Transform>(tc, entity, scene, cm);
     });
 }
 

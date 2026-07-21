@@ -1,6 +1,7 @@
 #include "para-edit/ecs/systems/HierarchySystem.hpp"
 
 #include "para-edit/core/Logger.hpp"
+#include "para-edit/ecs/Scene.hpp"
 #include "para-edit/ecs/components.hpp"
 #include "para-edit/ecs/types.hpp"
 
@@ -44,6 +45,14 @@ void HierarchySystem::SetParent(Entity child, Entity parent) {
         childH->previousSibling = sibling;
         childH->nextSibling = INVALID_ENTITY;
     }
+}
+
+void HierarchySystem::RemoveChild(Entity child, Entity parent) {
+    if (child == INVALID_ENTITY || parent == INVALID_ENTITY) {
+        return;
+    }
+
+    m_UnlinkFromParent(m_scene.GetComponent<Hierarchy>(child));
 }
 
 void HierarchySystem::OnEntityRemoved(Entity e) {
