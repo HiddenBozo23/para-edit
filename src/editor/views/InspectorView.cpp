@@ -15,7 +15,7 @@ InspectorView::InspectorView(Editor& editor)
     m_RegisterInspector<Name>("name", [this](Entity entity,
                                              Name& nc, Scene& scene, CommandManager& cm) {
         ImGui::PushID(entity);
-        ImGui::InputText("name", nc.name, sizeof(Name));
+        // ImGui::InputText("name", nc.name, sizeof(Name));
         ImGui::PopID();
 
         m_HandleEditCommand<Name>(nc, entity, scene, cm);
@@ -32,7 +32,12 @@ InspectorView::InspectorView(Editor& editor)
 void InspectorView::OnRender() {
     ImGui::Begin("Inspector");
 
-    Entity selected = 0;
+    Entity selected = m_editor.GetSelected();
+    if (selected == INVALID_ENTITY) {
+        ImGui::End();
+        return;
+    }
+
     Scene& scene = m_editor.GetScene();
     CommandManager& cm = m_editor.GetCommandManager();
 

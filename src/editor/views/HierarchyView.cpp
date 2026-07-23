@@ -47,6 +47,11 @@ void HierarchyView::OnRender() {
         }
     }
 
+    // delselec when an empty space in the hierarchy view is clicked
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered()) {
+        m_editor.SetSelected(INVALID_ENTITY);
+    }
+
     ImGui::End();
 }
 
@@ -57,12 +62,19 @@ void HierarchyView::m_DrawEntity(Entity entity, Hierarchy* hc, Scene& scene, Hie
         label = nc->name;
     }
 
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow;
     if (hc->firstChild == INVALID_ENTITY) {
         flags |= ImGuiTreeNodeFlags_Leaf;
     }
+    if (m_editor.GetSelected() == entity) {
+        flags |= ImGuiTreeNodeFlags_Selected;
+    }
 
     bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), flags);
+
+    if (ImGui::IsItemClicked()) {
+        m_editor.SetSelected(entity);
+    }
 
     if (ImGui::BeginDragDropSource()) {
         ImGui::SetDragDropPayload(m_dragDropKey.data(), &entity, sizeof(Entity));

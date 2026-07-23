@@ -2,6 +2,7 @@
 
 #include "para-edit/core/Application.hpp"
 #include "para-edit/ecs/Scene.hpp"
+#include "para-edit/ecs/types.hpp"
 #include "para-edit/editor/CommandManager.hpp"
 #include "para-edit/editor/ViewManager.hpp"
 
@@ -20,6 +21,8 @@ class Editor : public Application {
 
     Scene& GetScene();
     CommandManager& GetCommandManager();
+    Entity GetSelected();
+    void SetSelected(Entity entity);
 
     template <typename T, typename... Args>
     void RunCommand(Args&&... args) {
@@ -29,14 +32,25 @@ class Editor : public Application {
     void AddEmptyEntity();
 
    private:
+    struct m_Prefab {
+        std::string name;
+        std::function<Entity()> constructor;
+    };
+
     void m_RenderMenuBar();
 
     void m_SetupDockspace(ImGuiID dockspaceId, ImVec2 size);
 
-    bool m_firstFrame = true;
+    Entity m_selected = INVALID_ENTITY;
 
     Scene m_scene{};
     ViewManager m_viewManager{};
     CommandManager m_commandManager;
+
+    std::vector<m_Prefab> m_prefabs{};
+
+    bool m_firstFrame = true;
+
+    std::vector<std::string> m_hiddenComponents{};
 };
 }  // namespace para

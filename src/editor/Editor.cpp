@@ -31,6 +31,15 @@ Editor::Editor()
     m_viewManager.AddView<LogView>(*this);
     m_viewManager.AddView<InspectorView>(*this);
 
+    // define prefabs;
+    m_prefabs.push_back({"empty", [this]() {
+                             return m_scene.CreateEntity();
+                         }});
+
+    // hide components
+    m_hiddenComponents.push_back("name");
+    m_hiddenComponents.push_back("hierarchy");
+
     // delete this later
 
     Entity e1 = m_scene.CreateEntity();
@@ -115,25 +124,77 @@ CommandManager& Editor::GetCommandManager() {
     return m_commandManager;
 }
 
+Entity Editor::GetSelected() {
+    return m_selected;
+}
+
+void Editor::SetSelected(Entity entity) {
+    m_selected = entity;
+}
+
 void Editor::m_RenderMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Scene")) {
-            if (ImGui::MenuItem("Undo")) {
+        if (ImGui::BeginMenu("scene")) {
+            if (ImGui::MenuItem("undo")) {
                 m_commandManager.Undo();
             }
-            if (ImGui::MenuItem("Redo")) {
+            if (ImGui::MenuItem("redo")) {
                 m_commandManager.Redo();
             }
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Entity")) {
-            if (ImGui::BeginMenu("Add")) {
-                if (ImGui::MenuItem("Empty")) {
-                    AddEmptyEntity();
+        if (ImGui::BeginMenu("entity")) {
+            if (ImGui::BeginMenu("create")) {
+                for (const auto& prefab : m_prefabs) {
+                    if (ImGui::MenuItem(prefab.name.c_str())) {
+                        prefab.constructor();
+                    }
                 }
                 ImGui::EndMenu();
             }
+            if (ImGui::MenuItem("destroy")) {
+                m_commandManager.Execute<DestroyEntityCommand>(0, *m_scene.GetSystem<HierarchySystem>());
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("component")) {
+            if (ImGui::BeginMenu("add")) {
+                for (const auto& map : m_scene.GetComponentConstructors()) {
+                    auto& name = map.first;
+
+                    // hide components in m_hiddenComponents
+                    auto it = std::find(m_hiddenComponents.begin(), m_hiddenComponents.end(), name);
+                    if (it != m_hiddenComponents.end()) {
+                        continue;
+                    }
+
+                    if (ImGui::MenuItem(name.c_str())) {
+                        m_commandManager.Execute<AddComponentByNameCommand>(name, m_selected);
+                    }
+                }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("remove")) {
+                for (const auto& map : m_scene.GetComponentConstructors()) {
+                    auto& name = map.first;
+
+                    // hide components in m_hiddenComponents
+                    auto it = std::find(m_hiddenComponents.begin(), m_hiddenComponents.end(), name);
+                    if (it != m_hiddenComponents.end()) {
+                        continue;
+                    }
+
+                    if (ImGui::MenuItem(name.c_str())) {
+                        m_commandManager.Execute<RemoveComponentByNameCommand>(name, m_selected);
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();

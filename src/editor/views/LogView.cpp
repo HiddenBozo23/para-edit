@@ -39,7 +39,7 @@ void LogView::OnRender() {
 
             text = log.msg;
             if (m_verbose) {
-                text = log.timestamp + "::" + text + "::" + log.file + " LINE " + std::to_string(log.line);
+                text = log.timestamp + "|" + text + "|" + log.file + "|line " + std::to_string(log.line);
             }
             ImGui::TextWrapped("%s", text.c_str());
 

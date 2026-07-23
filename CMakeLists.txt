@@ -13,12 +13,14 @@ find_package(glm CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+find_package(nlohmann_json)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     glm::glm-header-only
     glfw
     glad::glad
     imgui::imgui
+    nlohmann_json::nlohmann_json
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)

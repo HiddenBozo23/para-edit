@@ -131,6 +131,59 @@ class CreateEntityCommand : public ICommand {
 };
 
 class DestroyEntityCommand : public ICommand {
+   public:
+    DestroyEntityCommand(Scene& scene, Entity entity, HierarchySystem& hs)
+        : ICommand(scene), m_entity(entity), m_hs(hs) {
+        m_entitySnapshot = m_scene.SerialiseEntity(entity);
+
+        auto hc = m_scene.GetComponent<Hierarchy>(entity);
+
+        m_parent = hc->parent;
+        m_firstChild = hc->firstChild;
+
+        if (m_firstChild != INVALID_ENTITY) {
+            m_lastChild = m_firstChild;
+            Hierarchy* childH = m_scene.GetComponent<Hierarchy>(m_firstChild);
+
+            while (childH->nextSibling != INVALID_ENTITY) {
+                m_lastChild = childH->nextSibling;
+                childH = m_scene.GetComponent<Hierarchy>(m_lastChild);
+            }
+        }
+    }
+
+    void Execute() override {
+        m_scene.DestroyEntity(m_entity);
+    }
+
+    void Undo() override {
+        m_scene.DeserialiseEntity(m_entity, m_entitySnapshot);
+
+        // restore hierachy
+        auto hc = m_scene.GetComponent<Hierarchy>(m_entity);
+
+        m_hs.SetParent(m_entity, m_parent);
+        if (m_firstChild != INVALID_ENTITY) {
+            hc->firstChild = m_firstChild;
+
+            hc = m_scene.GetComponent<Hierarchy>(m_firstChild);
+            hc->previousSibling = INVALID_ENTITY;
+        }
+        if (m_lastChild != INVALID_ENTITY) {
+            hc = m_scene.GetComponent<Hierarchy>(m_lastChild);
+            hc->nextSibling = INVALID_ENTITY;
+        }
+    }
+
+   private:
+    std::string m_entitySnapshot{};
+
+    Entity m_entity;
+    Entity m_parent = INVALID_ENTITY;
+    Entity m_firstChild = INVALID_ENTITY;
+    Entity m_lastChild = INVALID_ENTITY;
+
+    HierarchySystem& m_hs;
 };
 
 template <typename T>
@@ -148,6 +201,42 @@ class AddComponentCommand : public ICommand {
     }
 
    private:
+    Entity m_entity;
+};
+
+class AddComponentByNameCommand : public ICommand {
+   public:
+    AddComponentByNameCommand(Scene& scene, const std::string& name, Entity entity)
+        : ICommand(scene), m_name(name), m_entity(entity) {}
+
+    void Execute() override {
+        m_scene.AddComponentByName(m_name, m_entity);
+    }
+
+    void Undo() override {
+        m_scene.RemoveComponentByName(m_name, m_entity);
+    }
+
+   private:
+    std::string m_name;
+    Entity m_entity;
+};
+
+class RemoveComponentByNameCommand : public ICommand {
+   public:
+    RemoveComponentByNameCommand(Scene& scene, const std::string& name, Entity entity)
+        : ICommand(scene), m_name(name), m_entity(entity) {}
+
+    void Execute() override {
+        m_scene.RemoveComponentByName(m_name, m_entity);
+    }
+
+    void Undo() override {
+        m_scene.AddComponentByName(m_name, m_entity);
+    }
+
+   private:
+    std::string m_name;
     Entity m_entity;
 };
 
